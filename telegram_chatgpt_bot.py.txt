@@ -1,0 +1,59 @@
+import logging
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+import openai
+
+# Replace with your Telegram Bot API token
+TELEGRAM_TOKEN = 6670566169:AAF0mtlCoUM2eyAqO9ald_pPAMwshVwS22g
+
+# Replace with your OpenAI API key
+OPENAI_API_KEY = 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
+
+# Set the OpenAI API key
+openai.api_key = OPENAI_API_KEY
+
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+# Define a function to handle the /start command
+def start(update: Update, _: CallbackContext) -> None:
+    update.message.reply_text('Hello! I am your ChatGPT bot. Send me a message, and I will respond with AI-generated text.')
+
+# Define a function to handle incoming messages
+def echo(update: Update, _: CallbackContext) -> None:
+    user_message = update.message.text
+
+    # Pass the user's message to the ChatGPT API
+    response = openai.Completion.create(
+        engine="text-davinci-002",  # Use the appropriate GPT-3 engine/version
+        prompt=user_message,
+        max_tokens=150  # Set the maximum number of tokens in the response
+    )
+
+    # Extract the AI-generated response from the ChatGPT API response
+    ai_response = response['choices'][0]['text'].strip()
+
+    # Send the AI-generated response back to the user
+    update.message.reply_text(ai_response)
+
+def main() -> None:
+    # Create the Telegram Bot updater
+    updater = Updater(TELEGRAM_TOKEN)
+
+    # Get the dispatcher to register handlers
+    dispatcher = updater.dispatcher
+
+    # Register the command handler for the /start command
+    dispatcher.add_handler(CommandHandler("start", start))
+
+    # Register the message handler to process incoming messages
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+
+    # Start the Bot
+    updater.start_polling()
+
+    # Run the bot until the user presses Ctrl-C
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
